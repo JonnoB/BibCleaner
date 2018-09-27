@@ -1,0 +1,60 @@
+---
+title: "Untitled"
+author: "Jonathan Bourne"
+date: "12 September 2018"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r}
+packages <- c("tidyverse", "stringr", "readr","bibtex", "RefManageR")
+#file.path("/media/jonno/Seagate Expansion Drive/Msc-Thesis-Data/Cormats")
+
+new.packages <- packages[!(packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+
+sapply(packages, library, character.only = TRUE)
+rm(list=c("packages",  "new.packages"))
+
+
+```
+
+
+file paths
+```{r}
+
+ProjectPath <-"/home/jonno/Dropbox/Apps/ShareLaTeX/Empty_Homes_Palgrave"
+
+TexPath <- file.path(ProjectPath, "main.tex")
+
+BibPath <- file.path(ProjectPath, "mendeley_v2.bib")
+```
+
+
+```{r}
+
+Texfile <- readChar(TexPath, file.info(BibPath)$size)
+
+
+test <- str_extract_all(Texfile,"\\\\cite\\{.*?\\}" )
+test2 <- test %>% map(~{
+  .x %>% gsub("cite", "", .) %>%
+  gsub("\\{|\\}", "",.) %>%
+  gsub("\\", "", ., fixed = T)
+})%>% unlist %>%
+  str_split(., ",") %>%
+  unlist %>%
+  str_trim()
+
+test3 <- unique(test2)
+  
+
+Bibdata <- ReadBib(BibPath, check = FALSE)
+
+Bib2 <- Bibdata[[names(Bibdata) %in% unique(test2)]]
+
+WriteBib(Bib2, file.path(ProjectPath, "bibdoc.bib"), biblatex = TRUE)
+
+```
